@@ -3,6 +3,7 @@ package com.onlinestore.resource;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Iterator;
@@ -26,6 +27,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import com.jayway.jsonpath.internal.Path;
 import com.onlinestore.model.Item;
+import com.onlinestore.service.AwsService;
 import com.onlinestore.service.ItemService;
 
 @RestController
@@ -34,6 +36,9 @@ public class ItemResource {
 	
 	@Autowired
 	private ItemService itemService;
+	
+	@Autowired
+	private AwsService awsService;
 	
 	@RequestMapping(value="/add", method=RequestMethod.POST)
 	public Item addItemPost(@RequestBody Item item) {	
@@ -98,6 +103,23 @@ public class ItemResource {
 			return new ResponseEntity("Upload failed.", HttpStatus.BAD_REQUEST);
 		}
 	}
+	
+	@RequestMapping (value="/uploadToAws/image", method=RequestMethod.POST)
+	public ResponseEntity uploadToAws(@RequestParam("id") Long id, ServletRequest request,
+									ServletResponse response) {
+		
+		try {
+			this.awsService.uploadImage(request, id);
+			return new ResponseEntity("Image uploaded to AWS 3.", HttpStatus.OK);
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+			return new ResponseEntity("Upload to AWS failed.", HttpStatus.BAD_REQUEST);
+		}
+		
+	}
+	
+	
 	@RequestMapping(value="/itemList", method=RequestMethod.GET)
 	public List<Item> getItemList() {
 		return itemService.showAll();
@@ -109,10 +131,14 @@ public class ItemResource {
 	}
 	
 	@RequestMapping(value="/delete/{id}", method=RequestMethod.POST)
-	public ResponseEntity deleteItem(@PathVariable ("id") Long id) {
+	public ResponseEntity deleteItem(@PathVariable ("id") Long id) throws IOException{
+		
 		this.itemService.deleteItem(id);
 		
-		return new ResponseEntity("Item deleted successfully", HttpStatus.OK);
+		String image = id + ".png";
+		Files.delete(Paths.get("src/main/resources/static/images/item/"+image));
+		
+		return new ResponseEntity(HttpStatus.OK);
 	}
 	
 	

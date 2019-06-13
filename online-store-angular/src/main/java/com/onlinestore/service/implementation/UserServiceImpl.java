@@ -1,5 +1,6 @@
 package com.onlinestore.service.implementation;
 
+import java.util.Optional;
 import java.util.Set;
 
 import javax.transaction.Transactional;
@@ -46,5 +47,23 @@ public class UserServiceImpl implements UserService {
 		return localUser;
 	}
 	
-
+	@Override
+	public User findByUsername(String username) {
+		return userRepository.findByUsername(username);
+	}
+	
+	@Override
+	public User findByEmail(String email) {
+		return userRepository.findByEmail(email);
+	}
+	
+	@Override
+	public Optional<User> findById(Long id) {
+		return userRepository.findById(id);
+	}
+	
+	@Override
+	public void save(User user) {
+		userRepository.save(user);
+	}
 }
